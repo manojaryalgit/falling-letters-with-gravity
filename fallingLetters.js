@@ -69,13 +69,47 @@ class Letter {
 
     // Resolve collision with another letter
     resolveCollision(other) {
-        // Simple elastic collision handling (for now, can be improved)
-        const angle = Math.atan2(this.y - other.y, this.x - other.x);
-        const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        // Get the vector from this letter to the other letter
+        const dx = this.x - other.x;
+        const dy = this.y - other.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        // Only resolve the collision if the letters are colliding
+        if (distance < (this.size / 2 + other.size / 2)) {
+            // Calculate the angle of collision
+            const angle = Math.atan2(dy, dx);
 
-        // Reverse velocities based on the angle of collision
-        this.vx = -speed * Math.cos(angle);
-        this.vy = -speed * Math.sin(angle);
+            // Calculate the velocities along the normal (line connecting centers of the letters)
+            const thisSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+            const otherSpeed = Math.sqrt(other.vx * other.vx + other.vy * other.vy);
+
+            // Calculate the normal and tangent components of the velocity
+            const normalX = dx / distance;
+            const normalY = dy / distance;
+
+            // Normal velocity components for each letter
+            const thisVelocityNormal = this.vx * normalX + this.vy * normalY;
+            const otherVelocityNormal = other.vx * normalX + other.vy * normalY;
+
+            // Reflect the velocities using the elastic collision formula
+            const totalVelocity = thisVelocityNormal - otherVelocityNormal;
+
+            // Update the velocities of the letters
+            this.vx -= totalVelocity * normalX;
+            this.vy -= totalVelocity * normalY;
+            other.vx += totalVelocity * normalX;
+            other.vy += totalVelocity * normalY;
+
+            // Prevent letters from overlapping by repositioning them
+            const overlap = (this.size / 2 + other.size / 2) - distance;
+            const correctionFactor = overlap / 2;
+            
+            // Move both letters out of overlap
+            this.x += normalX * correctionFactor;
+            this.y += normalY * correctionFactor;
+            other.x -= normalX * correctionFactor;
+            other.y -= normalY * correctionFactor;
+        }
     }
 }
 
